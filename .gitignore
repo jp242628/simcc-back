@@ -1,8 +1,4 @@
 .agents/
-/logs
-/logs/
-
-
 .env.container
 .tool-versions
 *.zip

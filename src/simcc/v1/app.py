@@ -4,7 +4,6 @@ from simcc.v1.routers import (
     external,
     graduate_program,
     institution,
-    logs,
     metrics,
     powerBi,
     research_group,
@@ -39,4 +38,3 @@ v1_app.include_router(institution.router)
 v1_app.include_router(graduate_program.router)
 v1_app.include_router(research_group.router)
 v1_app.include_router(powerBi.router)
-v1_app.include_router(logs.router)
