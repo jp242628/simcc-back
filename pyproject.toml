@@ -67,20 +67,18 @@ quote-style = 'single'
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
-addopts = "-m 'not ai_live' -p no:warnings"
+addopts = "-p no:warnings"
 timeout = "60"
 env_files = [".env"]
 markers = [
     "unit: testes unitários rápidos e isolados com mocks",
     "integration: testes de integração com banco de dados",
-    "ai_live: testes ponta-a-ponta reais com OpenAI (gastam tokens e exigem OPENAI_API_KEY)",
 ]
 
 [tool.taskipy.tasks]
 run = 'fastapi dev src/simcc --reload-dir "src/simcc"'
 
 test = 'pytest -s -x --cov=src/simcc'
-test_live = 'pytest -o addopts="" -s -x -v -m ai_live --cov=src/simcc'
 
 cov = 'coverage html'
 deploy = 'ssh gmcosta@172.16.0.243 -p 30507 -i ~/.ssh/id_ed25519 "cd /opt/simcc/simcc-back && git pull && cd .. && docker compose up --build -d --force-recreate api"'

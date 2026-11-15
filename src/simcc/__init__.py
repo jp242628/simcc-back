@@ -67,13 +67,18 @@ app = FastAPI(
     redoc_url=None,
 )
 
+CORS_ALLOW_ORIGINS = ['*']
+CORS_ALLOW_METHODS = ['*']
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_CREDENTIALS = True
+
 app.add_middleware(EnsurePathPrefixMiddleware, prefix=settings.ROOT_PATH)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ALLOW_ORIGINS,
-    allow_methods=settings.CORS_ALLOW_METHODS,
-    allow_headers=settings.CORS_ALLOW_HEADERS,
-    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
 )
 app.add_middleware(LoggingMiddleware)
 
