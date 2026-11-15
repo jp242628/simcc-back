@@ -23,7 +23,6 @@ class Settings(BaseSettings, extra='ignore'):
     )
     OPENAI_API_KEY: Optional[str] = None
     INTERNAL_API_KEY: Optional[str] = None
-    LOG_STREAM_TOKEN: Optional[str] = None
 
     XML_PATH: str = 'storage/xml'
     CURRENT_XML_PATH: str = 'storage/xml/current'
@@ -33,9 +32,6 @@ class Settings(BaseSettings, extra='ignore'):
 
     APPLICATION: str = 'simcc'
     ENVIRONMENT: str = 'development'
-    LOG_LEVEL: str = 'INFO'
-    LOG_DIR: str = 'logs'
-    LOG_RETENTION_DAYS: int = 7
 
     # Configurações de Cache (Redis)
     REDIS_URL: str = 'redis://localhost:6379/0'
@@ -46,16 +42,6 @@ class Settings(BaseSettings, extra='ignore'):
     # Configurações de IA e Qualidade
     AI_COSINE_DISTANCE_THRESHOLD: float = 0.65
     AI_CACHE_TTL: int = 3600
-
-    # Configurações de Telemetria (OpenTelemetry)
-    OTEL_ENABLED: bool = True
-    OTEL_EXPORTER_TYPE: str = 'none'
-    OTEL_METRICS_EXPORTER_TYPE: str = 'none'
-    OTEL_EXPORTER_OTLP_ENDPOINT: str = 'http://localhost:4317'
-    OTEL_EXPORTER_OTLP_INSECURE: bool = True
-    OTEL_SAMPLING_RATIO: float = 1.0
-    OTEL_SERVICE_NAME: str = 'simcc-back'
-    OTEL_SERVICE_NAMESPACE: str = 'simcc'
 
     # Configurações do Google Analytics 4 (GA4)
     GA4_PROPERTY_ID: Optional[str] = Field(

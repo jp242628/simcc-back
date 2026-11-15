@@ -784,25 +784,6 @@ ORDER BY id;
         """
 
 
-class DimLogsRoutineQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT (unnest(enum_range(NULL::routine_type)))::TEXT AS routine_type;
-        """
-
-
-class FatLogsRoutineQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT DISTINCT ON (type) type::TEXT, error::TEXT, detail::TEXT,
-            created_at::TEXT
-        FROM logs.routine
-        ORDER BY type, created_at DESC;
-        """
-
-
 class FatEventOrganizationQuery(BaseQuery):
     @override
     def build_sql(self) -> str:

@@ -231,16 +231,6 @@ async def get_dim_tecnical_production_terms(session, stopwords):
     return await query.execute()
 
 
-async def get_dim_logs_routine(session):
-    query = powerBi_query.DimLogsRoutineQuery(session)
-    return await query.execute()
-
-
-async def get_fat_logs_routine(session):
-    query = powerBi_query.FatLogsRoutineQuery(session)
-    return await query.execute()
-
-
 async def get_fat_event_organization(session):
     query = powerBi_query.FatEventOrganizationQuery(session)
     return await query.execute()
