@@ -48,7 +48,7 @@ jobs:
             set -euo pipefail
 
             # Caminho ajustado
-            cd /opt/apps/prod/observatorio/observatorio-back
+            cd /opt/simcc/simcc-back
 
             # Atualiza o código
             git fetch origin main
@@ -57,7 +57,7 @@ jobs:
             git clean -fd
 
             # Volta pra pasta certa
-            cd /opt/apps/prod/observatorio
+            cd /opt/simcc
 
             # Constrói a imagem localmente e recria o container usando o compose.yaml atual
             docker compose up -d --build --force-recreate api
