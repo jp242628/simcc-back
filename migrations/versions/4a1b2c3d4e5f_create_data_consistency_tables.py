@@ -11,7 +11,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = '4a1b2c3d4e5f'
 down_revision: Union[str, Sequence[str], None] = '3c5e8a1f2b7d'
 branch_labels: Union[str, Sequence[str], None] = None
@@ -62,7 +61,9 @@ def upgrade() -> None:
             server_default=sa.text('gen_random_uuid()'),
             nullable=False,
         ),
-        sa.Column('load_run_id', postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column(
+            'load_run_id', postgresql.UUID(as_uuid=True), nullable=False
+        ),
         sa.Column('phase', sa.String(length=10), nullable=False),
         sa.Column('metric_key', sa.String(length=100), nullable=False),
         sa.Column('scope', sa.String(length=20), nullable=False),
@@ -116,7 +117,9 @@ def upgrade() -> None:
             server_default=sa.text('gen_random_uuid()'),
             nullable=False,
         ),
-        sa.Column('load_run_id', postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column(
+            'load_run_id', postgresql.UUID(as_uuid=True), nullable=False
+        ),
         sa.Column('metric_key', sa.String(length=100), nullable=False),
         sa.Column('scope', sa.String(length=20), nullable=False),
         sa.Column(

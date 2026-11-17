@@ -53,26 +53,6 @@ class FatOpenalexResearcherQuery(BaseQuery):
         """
 
 
-class ResearcherAreaLeaderQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT r.lattes_id::TEXT, a.name::TEXT AS area_leader, ra.focal_point::TEXT
-        FROM admin.researcher_area ra
-        LEFT JOIN admin.areas a ON a.id = ra.area_id
-        LEFT JOIN admin.researcher r ON r.researcher_id = ra.researcher_id;
-        """
-
-
-class ResearcherAreaLeaderResearcherQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT id::TEXT AS researcher_id, lattes_id::TEXT
-        FROM researcher;
-        """
-
-
 class FatOpenalexArticleQuery(BaseQuery):
     @override
     def build_sql(self) -> str:
@@ -202,22 +182,28 @@ class DimDepartamentResearcherQuery(BaseQuery):
         """
 
 
-class ResearcherLattesIdQuery(BaseQuery):
+class FatGroupLeadersQuery(BaseQuery):
     @override
     def build_sql(self) -> str:
         return """
-        SELECT id::TEXT AS researcher_id, lattes_id::TEXT
-        FROM researcher
-        WHERE lattes_id IS NOT NULL;
+        SELECT id::TEXT, name::TEXT, institution::TEXT, first_leader::TEXT, first_leader_id::TEXT,
+            second_leader::TEXT, second_leader_id::TEXT, area::TEXT AS "AREA", census::TEXT,
+            start_of_collection::TEXT, end_of_collection::TEXT, group_identifier::TEXT, year::TEXT AS "YEAR",
+            institution_name::TEXT, category::TEXT
+        FROM research_group
+        WHERE 1 = 1
+            AND (first_leader_id IS NOT NULL OR second_leader_id IS NOT NULL);
         """
 
 
-class InstitutionAcronymQuery(BaseQuery):
+class DimResearchGroupQuery(BaseQuery):
     @override
     def build_sql(self) -> str:
         return """
-        SELECT id::TEXT AS institution_id, acronym::TEXT
-        FROM institution;
+        SELECT rg.id::TEXT AS group_id, TRANSLATE(rg.name, '"', '')::TEXT AS group_name,
+            rg.area::TEXT, i.id::TEXT AS institution_id
+        FROM public.research_group rg
+        RIGHT JOIN institution i ON rg.institution ILIKE '%' || i.acronym || '%';
         """
 
 
@@ -317,12 +303,17 @@ class DimResearcherQuery(BaseQuery):
         return """
         SELECT r.name::TEXT AS researcher, r.id::TEXT AS researcher_id,
             TO_CHAR(r.last_update,'dd/mm/yyyy')::TEXT AS last_update,
-            r.graduation::TEXT AS graduation, r.institution_id::TEXT, r.docente::TEXT,
+            r.graduation::TEXT AS graduation, ri.institution_id::TEXT, r.docente::TEXT,
             regexp_replace(r.abstract, E'[\\\\n\\\\r]+', ' - ', 'g' )::TEXT AS abstract,
             :origin || 'ResearcherData/Image?researcher_id=' || r.id::TEXT AS image,
             r.orcid::TEXT
         FROM researcher r
-        WHERE r.status = True;
+        LEFT JOIN LATERAL (
+            SELECT ri.institution_id
+            FROM researcher_institution ri
+            WHERE ri.researcher_id = r.id
+            LIMIT 1
+        ) ri ON TRUE;
         """
 
 
@@ -793,25 +784,6 @@ ORDER BY id;
         """
 
 
-class DimLogsRoutineQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT (unnest(enum_range(NULL::routine_type)))::TEXT AS routine_type;
-        """
-
-
-class FatLogsRoutineQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT DISTINCT ON (type) type::TEXT, error::TEXT, detail::TEXT,
-            created_at::TEXT
-        FROM logs.routine
-        ORDER BY type, created_at DESC;
-        """
-
-
 class FatEventOrganizationQuery(BaseQuery):
     @override
     def build_sql(self) -> str:
@@ -1013,74 +985,6 @@ class FatCoAuthorshipQuery(BaseQuery):
         """
 
 
-class GuidanceQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        WITH co_supervisors AS (
-            SELECT DISTINCT ON (gcs.guidance_tracking_id)
-                gcs.guidance_tracking_id,
-                gcs.co_supervisor_researcher_id
-            FROM admin.guidance_co_supervisors gcs
-            ORDER BY gcs.guidance_tracking_id
-        )
-        SELECT
-            gt.id::TEXT AS id,
-            r_student.lattes_id::TEXT AS student_lattes_id,
-            r_supervisor.lattes_id::TEXT AS supervisor_lattes_id,
-            r_co.lattes_id::TEXT AS co_supervisor_lattes_id, 
-            gt.graduate_program_id::TEXT AS graduate_program_id,
-            gt.start_date::TEXT AS start_date,
-            gt.planned_date_project::TEXT AS planned_date_project,
-            gt.done_date_project::TEXT AS done_date_project,
-            gt.planned_date_qualification::TEXT AS planned_date_qualification,
-            gt.done_date_qualification::TEXT AS done_date_qualification,
-            gt.planned_date_conclusion::TEXT AS planned_date_conclusion,
-            gt.done_date_conclusion::TEXT AS done_date_conclusion,
-            r_student.name::TEXT AS student_name,
-            r_supervisor.name::TEXT AS supervisor_name,
-            r_co.name::TEXT AS co_name,
-            gp.type::TEXT AS type
-        FROM public.guidance_tracking gt
-        LEFT JOIN admin.researcher r_student
-            ON r_student.researcher_id = gt.student_researcher_id
-        LEFT JOIN admin.researcher r_supervisor
-            ON r_supervisor.researcher_id = gt.supervisor_researcher_id
-        LEFT JOIN admin.graduate_program gp
-            ON gp.graduate_program_id = gt.graduate_program_id
-        LEFT JOIN co_supervisors cos
-            ON cos.guidance_tracking_id = gt.id
-        LEFT JOIN admin.researcher r_co
-            ON r_co.researcher_id = cos.co_supervisor_researcher_id
-        WHERE gt.deleted_at IS NULL;
-        """
-
-
-class GuidanceResearcherQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT id::TEXT AS researcher_id, lattes_id::TEXT
-        FROM researcher;
-        """
-
-
-class DimTagsQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT id::TEXT, name::TEXT, color_code::TEXT FROM admin.tags;
-        """
-
-
-class FatTagsQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT guidance_tracking_id::TEXT, tag_id::TEXT
-        FROM admin.guidance_tags;
-        """
-
 
 class DimSdgQuery(BaseQuery):
     @override
@@ -1142,155 +1046,4 @@ class FatSdgAlignmentResearcherQuery(BaseQuery):
             ROUND((total_articles * 100.0) / researcher_total, 2)::TEXT AS percentage
         FROM ranking
         WHERE rank = 1;
-        """
-
-
-class IndGuidanceOriQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        WITH Masters AS (
-            SELECT 
-                gt.graduate_program_id,
-                EXTRACT(YEAR FROM gt.done_date_conclusion) AS year_val,
-                COUNT(*) AS qty
-            FROM public.guidance_tracking gt
-            JOIN admin.graduate_program gp ON gt.graduate_program_id = gp.graduate_program_id
-            WHERE gp.type = 'MESTRADO' 
-            AND gt.done_date_conclusion IS NOT NULL
-            GROUP BY gt.graduate_program_id, EXTRACT(YEAR FROM gt.done_date_conclusion)
-        ),
-        Doctorate AS (
-            SELECT 
-                gt.graduate_program_id,
-                EXTRACT(YEAR FROM gt.done_date_conclusion) AS year_val,
-                COUNT(*) AS qty
-            FROM public.guidance_tracking gt
-            JOIN admin.graduate_program gp ON gt.graduate_program_id = gp.graduate_program_id
-            WHERE gp.type = 'DOUTORADO' 
-            AND gt.done_date_conclusion IS NOT NULL
-            GROUP BY gt.graduate_program_id, EXTRACT(YEAR FROM gt.done_date_conclusion)
-        ),
-        Permanent AS (
-            SELECT 
-                graduate_program_id,
-                year AS year_val,
-                COUNT(*) AS qty
-            FROM admin.graduate_program_researcher
-            WHERE type_ = 'PERMANENTE'
-            GROUP BY graduate_program_id, year
-        )
-        SELECT 
-            p.graduate_program_id::TEXT,
-            p.year_val::TEXT AS year,
-            COALESCE(m.qty, 0)::TEXT AS masters_defenses,
-            COALESCE(d.qty, 0)::TEXT AS doctorate_defenses,
-            p.qty::TEXT AS permanent_researchers,
-            ((COALESCE(m.qty, 0) + (2.0 * COALESCE(d.qty, 0))) / NULLIF(p.qty, 0))::TEXT AS ind_ori
-        FROM Permanent p
-        LEFT JOIN Masters m ON p.graduate_program_id = m.graduate_program_id AND p.year_val = m.year_val
-        LEFT JOIN Doctorate d ON p.graduate_program_id = d.graduate_program_id AND p.year_val = d.year_val
-        ORDER BY p.graduate_program_id, p.year_val;
-        """
-
-
-class IndGuidanceCoautProgQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT 
-            gpr.graduate_program_id::TEXT,
-            r.researcher_id::TEXT
-        FROM admin.researcher r
-        INNER JOIN admin.graduate_program_researcher gpr
-            ON gpr.researcher_id = r.researcher_id;
-        """
-
-
-class IndGuidanceCoautProdQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT researcher_id::TEXT, doi::TEXT AS identifier, year::TEXT, 'ARTICLE'::TEXT AS type
-        FROM bibliographic_production
-        WHERE type = 'ARTICLE'
-
-        UNION ALL
-
-        SELECT bp.researcher_id::TEXT, bpb.isbn::TEXT AS identifier, bp.year::TEXT, 'BOOK'::TEXT AS type
-        FROM bibliographic_production bp
-        LEFT JOIN bibliographic_production_book bpb
-            ON bpb.bibliographic_production_id = bp.id
-        WHERE bp.type = 'BOOK'
-
-        UNION ALL
-
-        SELECT bp.researcher_id::TEXT, bpc.isbn::TEXT AS identifier, bp.year::TEXT, 'BOOK_CHAPTER'::TEXT AS type
-        FROM bibliographic_production bp
-        LEFT JOIN bibliographic_production_book_chapter bpc
-            ON bpc.bibliographic_production_id = bp.id
-        WHERE bp.type = 'BOOK_CHAPTER';
-        """
-
-
-class IndGuidanceDistoriQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        WITH ConcludingResearchers AS (
-            SELECT 
-                gt.graduate_program_id,
-                EXTRACT(YEAR FROM gt.done_date_conclusion) AS year_val,
-                COUNT(DISTINCT gt.supervisor_researcher_id) AS concluding_qty
-            FROM public.guidance_tracking gt
-            JOIN admin.graduate_program_researcher gpr 
-                ON gt.supervisor_researcher_id = gpr.researcher_id
-                AND gt.graduate_program_id = gpr.graduate_program_id
-                AND EXTRACT(YEAR FROM gt.done_date_conclusion) = gpr.year
-            WHERE gt.done_date_conclusion IS NOT NULL
-            AND gpr.type_ = 'PERMANENTE'
-            GROUP BY gt.graduate_program_id, EXTRACT(YEAR FROM gt.done_date_conclusion)
-        ),
-        Permanent AS (
-            SELECT 
-                graduate_program_id,
-                year AS year_val,
-                COUNT(DISTINCT researcher_id) AS total_qty
-            FROM admin.graduate_program_researcher
-            WHERE type_ = 'PERMANENTE'
-            GROUP BY graduate_program_id, year
-        )
-        SELECT 
-            p.graduate_program_id::TEXT,
-            p.year_val::TEXT AS year,
-            COALESCE(c.concluding_qty, 0)::TEXT AS concluding_researchers,
-            p.total_qty::TEXT AS permanent_researchers,
-            ((COALESCE(c.concluding_qty, 0) * 1.0) / NULLIF(p.total_qty, 0))::TEXT AS ind_dist_ori
-        FROM Permanent p
-        LEFT JOIN ConcludingResearchers c ON p.graduate_program_id = c.graduate_program_id AND p.year_val = c.year_val
-        ORDER BY p.graduate_program_id, p.year_val;
-        """
-
-
-class FatGuidanceHistoryQuery(BaseQuery):
-    @override
-    def build_sql(self) -> str:
-        return """
-        SELECT 
-            r_student.name::TEXT AS student_name,
-            r_student.lattes_id::TEXT AS student_lattes_id,
-            r_supervisor.lattes_id::TEXT AS supervisor_lattes_id,
-            gt.start_date::TEXT AS start_date,
-            gt.planned_date_project::TEXT AS planned_date_project,
-            gt.done_date_project::TEXT AS done_date_project,
-            gt.planned_date_qualification::TEXT AS planned_date_qualification,
-            gt.done_date_qualification::TEXT AS done_date_qualification,
-            gt.planned_date_conclusion::TEXT AS planned_date_conclusion,
-            gt.done_date_conclusion::TEXT AS done_date_conclusion
-        FROM public.guidance_tracking gt
-        INNER JOIN admin.researcher r_student
-            ON gt.student_researcher_id = r_student.researcher_id
-        LEFT JOIN admin.researcher r_supervisor
-            ON gt.supervisor_researcher_id = r_supervisor.researcher_id
-        WHERE gt.deleted_at IS NULL;
         """

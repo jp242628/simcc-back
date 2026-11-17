@@ -1,12 +1,7 @@
-from simcc.core.db.models.ai import (
-    SearchDocumentProduction,
-    SearchDocumentResearcher,
-)
 from simcc.core.db.models.base import table_registry
-from simcc.data_consistency.models import (
-    DataConsistencyResult,
-    DataLoadRun,
-    DataSnapshotMetric,
+from simcc.core.db.models.collection import (
+    Collection,
+    ResearcherCollection,
 )
 from simcc.core.db.models.expertise import (
     AreaExpertise,
@@ -98,6 +93,11 @@ from simcc.core.db.models.researcher import (
     ResearcherProfessionalExperience,
 )
 from simcc.core.db.models.researcher_institution import ResearcherInstitution
+from simcc.data_consistency.models import (
+    DataConsistencyResult,
+    DataLoadRun,
+    DataSnapshotMetric,
+)
 
 __all__ = [
     'AdvisoryActivity',
@@ -111,6 +111,7 @@ __all__ = [
     'BibliographicProductionWorkInEvent',
     'Brand',
     'City',
+    'Collection',
     'Country',
     'DataConsistencyResult',
     'DataLoadRun',
@@ -159,14 +160,13 @@ __all__ = [
     'Researcher',
     'ResearcherAddress',
     'ResearcherAreaExpertise',
+    'ResearcherCollection',
     'ResearcherIndProd',
     'ResearcherInstitution',
     'ResearcherProduction',
     'ResearcherProfessionalExperience',
     'Sdg',
     'SdgAlignment',
-    'SearchDocumentProduction',
-    'SearchDocumentResearcher',
     'ShortCourse',
     'ShortCourseTaught',
     'SocialMediaWebsiteBlog',

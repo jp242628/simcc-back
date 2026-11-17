@@ -6,6 +6,7 @@ import pytest
 from simcc.v2.repositories.researcher_filters import (
     _by_cities,
     _by_classification,
+    _by_collections,
     _by_graduate_programs,
     _by_graduation,
     _by_identity_territories,
@@ -17,6 +18,12 @@ from simcc.v2.repositories.researcher_filters import (
     without_fields,
 )
 from simcc.v2.schemas.filters import ResearcherFilter
+
+
+@pytest.fixture(scope='session', autouse=True)
+def setup_database():
+    """Sobrescreve fixture global para testes sem banco/docker."""
+    return
 
 
 def test_by_search_query_returns_condition():
@@ -83,7 +90,10 @@ def test_by_year_range_with_q_returns_none_in_builder():
 @pytest.mark.parametrize(
     ('kwargs', 'expected_count'),
     [
-        ({}, 0),
+        ({}, 0),  # sem filtro de coleção por padrão
+        ({'collection': ['simcc']}, 1),
+        ({'collection': ['all']}, 0),
+        ({'collection': ['*']}, 0),
         ({'q': 'Ana'}, 1),
         ({'institution_id': [uuid.uuid4()]}, 1),
         ({'graduate_program_id': [uuid.uuid4()]}, 1),
@@ -120,7 +130,7 @@ def test_build_researcher_conditions_disjunctive_exclusion():
         q='Maria',
         institution_id=[inst_id],
     )
-    # Exclude institution_id for disjunctive faceting
+    # Exclude institution_id for disjunctive faceting (resta apenas q)
     conditions = build_researcher_conditions(
         filter_obj, exclude=frozenset({'institution_id'})
     )
@@ -140,6 +150,28 @@ def test_build_researcher_conditions_disjunctive_exclusion():
 def test_new_builders_only_apply_when_set(builder, kwargs):
     assert builder(ResearcherFilter()) is None
     assert builder(ResearcherFilter(**kwargs)) is not None
+
+
+def test_by_collections_default_returns_none():
+    filter_obj = ResearcherFilter()
+    assert _by_collections(filter_obj) is None
+
+
+def test_by_collections_all_or_wildcard_returns_none():
+    assert _by_collections(ResearcherFilter(collection=['all'])) is None
+    assert _by_collections(ResearcherFilter(collection=['*'])) is None
+    assert _by_collections(ResearcherFilter(collection=['ALL'])) is None
+
+
+def test_by_collections_custom_slugs():
+    filter_obj = ResearcherFilter(collection=['fomento', 'bahia'])
+    cond = _by_collections(filter_obj)
+    assert cond is not None
+
+
+def test_by_collections_empty_returns_none():
+    filter_obj = ResearcherFilter(collection=[])
+    assert _by_collections(filter_obj) is None
 
 
 def test_source_type_is_handled_by_search_query_when_q_present():

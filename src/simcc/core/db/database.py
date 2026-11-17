@@ -16,10 +16,7 @@ SETTINGS = Settings()
 SYNC_URL = str(SETTINGS.DATABASE_URL).replace('+asyncpg', '+psycopg')
 ASYNC_URL = SETTINGS.DATABASE_URL
 
-from simcc.core.logging.config import register_db_logging
-
 async_engine = create_async_engine(ASYNC_URL, future=True)
-register_db_logging(async_engine)
 
 async_session = async_sessionmaker(
     async_engine,
@@ -28,34 +25,9 @@ async_session = async_sessionmaker(
 )
 
 sync_engine = create_engine(SYNC_URL, future=True)
-register_db_logging(sync_engine)
 
 sync_session = sessionmaker(
     sync_engine,
-    expire_on_commit=False,
-    class_=Session,
-)
-
-
-ADMIN_SYNC_URL = str(SETTINGS.ADMIN_DATABASE_URL).replace(
-    '+asyncpg', '+psycopg'
-)
-ADMIN_ASYNC_URL = SETTINGS.ADMIN_DATABASE_URL
-
-admin_async_engine = create_async_engine(ADMIN_ASYNC_URL, future=True)
-register_db_logging(admin_async_engine)
-
-admin_async_session = async_sessionmaker(
-    admin_async_engine,
-    expire_on_commit=False,
-    class_=AsyncSession,
-)
-
-admin_sync_engine = create_engine(ADMIN_SYNC_URL, future=True)
-register_db_logging(admin_sync_engine)
-
-admin_sync_session = sessionmaker(
-    admin_sync_engine,
     expire_on_commit=False,
     class_=Session,
 )
@@ -68,14 +40,4 @@ async def get_async_session():
 
 def get_sync_session():
     with sync_session() as session:
-        yield session
-
-
-async def get_admin_async_session():
-    async with admin_async_session() as session:
-        yield session
-
-
-def get_admin_sync_session():
-    with admin_sync_session() as session:
         yield session
