@@ -146,7 +146,11 @@ Endpoints internos exigem:
 X-Internal-API-Key: <INTERNAL_API_KEY>
 ```
 
-Quando a integração com o pipeline for confirmada, o fluxo esperado será:
+A integração com a rota de upload ainda não está implementada neste backend. Antes
+de conectar o ciclo, deve confirmar a rota/serviço e como identificar
+que os dados foram gravados ou que o processamento falhou.
+
+O fluxo esperado para cada ingestão é:
 
 ```text
 POST /loads
@@ -154,17 +158,17 @@ executar carga
 POST /loads/{id}/finish
 ```
 
-Em caso de erro, o pipeline deve chamar `/fail`. Essa integração ainda não está
-ativada em `routine.sh`: o ponto de entrada e o término da ingestão por arquivo
-precisam ser confirmados com a equipe responsável antes de conectar os
-endpoints.
+O `start` deve ocorrer antes das alterações no banco; `finish`, depois da
+confirmação de que a ingestão foi concluída; e `/fail`, se ela falhar. Se o
+upload iniciar um processamento assíncrono, o pipeline precisa aguardar um
+callback ou consultar um status final antes de chamar `finish`.
 
 O corpo de `/loads` é:
 
 ```json
 {
-  "load_type": "LATTES_D1",
-  "trigger_source": "MANUAL"
+  "load_type": "<TIPO_DE_CARGA_CONFIRMADO>",
+  "trigger_source": "<ORIGEM_CONFIRMADA>"
 }
 ```
 
@@ -198,7 +202,7 @@ Os endpoints internos são destinados ao pipeline, não ao frontend.
 | Campo | Descrição |
 |---|---|
 | `id` | Identificador da execução. |
-| `load_type` | Tipo da carga, como `LATTES_D1`. |
+| `load_type` | Tipo da carga acordado e informado pelo pipeline. |
 | `status` | `RUNNING`, `VALIDATED` ou `FAILED`. |
 | `trigger_source` | Origem, como `MANUAL`, `HOP` ou `SCHEDULED`. |
 | `started_at` | Data e hora de início. |
@@ -251,8 +255,7 @@ não devem ser commitadas nem compartilhadas no repositório.
 
 ## Próximas etapas
 
-* Confirmar a rota e o ciclo de vida da ingestão por arquivo com a equipe.
-* Confirmar o catálogo de cargas, responsáveis e frequências.
+* Confirmar a rota de upload, os tipos de carga e o sinal de sucesso/falha.
 * Implementar o envio diário de e-mails.
 * Definir autenticação de produção para frontend e serviços internos.
 * Avaliar médias bibliométricas em um painel separado, fora dos alertas.
