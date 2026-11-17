@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from simcc.data_consistency import routers as data_consistency
 from simcc.v1.routers import (
     external,
     graduate_program,
@@ -42,3 +43,5 @@ v1_app.include_router(research_group.router)
 v1_app.include_router(maria.router)
 v1_app.include_router(powerBi.router)
 v1_app.include_router(logs.router)
+v1_app.include_router(data_consistency.router)
+v1_app.include_router(data_consistency.internal_router)

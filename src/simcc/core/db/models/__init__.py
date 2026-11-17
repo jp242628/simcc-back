@@ -3,6 +3,11 @@ from simcc.core.db.models.ai import (
     SearchDocumentResearcher,
 )
 from simcc.core.db.models.base import table_registry
+from simcc.data_consistency.models import (
+    DataConsistencyResult,
+    DataLoadRun,
+    DataSnapshotMetric,
+)
 from simcc.core.db.models.expertise import (
     AreaExpertise,
     AreaSpecialty,
@@ -107,6 +112,9 @@ __all__ = [
     'Brand',
     'City',
     'Country',
+    'DataConsistencyResult',
+    'DataLoadRun',
+    'DataSnapshotMetric',
     'DidacticMaterial',
     'Education',
     'EventOrganization',

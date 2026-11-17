@@ -61,6 +61,8 @@ nav:
       - Lista vs. Perfil: conceitos/lista-e-perfil.md
       - Cache de Buscas: conceitos/cache.md
       - Logs Estruturados: conceitos/logs-estruturados.md
+  - Consistência de Dados:
+      - Regras do MVP: conceitos/consistencia-dados.md
   - Guia de Contribuição:
       - Visão Geral: guia-contribuicao/index.md
       - 1. Criação de Rotinas e Serviços: guia-contribuicao/rotinas.md
